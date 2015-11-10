@@ -1,5 +1,4 @@
 
-require 'eventmachine'
 require 'socket'
 
 # TODO: factorize with server
@@ -89,15 +88,21 @@ class Workers
 
 	def send_state(service, state, message)
 		params = {:state => state, :message => message }
-		$log.debug "[WORKERS] Sending to server: #{params}"
+		$log.debug "[WORKERS] Sending check result to server: #{params}"
 		d = EM::HttpRequest.new("#{$CFG[:url]}/v1/device/#{@me}/#{service}").post(:body => params)
 		d.add_callback { |http|
-			if http.response_header.status != 201
-				$log.warn "[WORKERS] Unexpected answer from API: #{http.response}"
+			if http.response_header.status == 201
+				$log.debug "[WORKERS] Check result successfuly sent: #{params}"
+			else
+				raise "#{http.response}"    # Unexpected response code
 			end
 		}
-		d.add_errback { |http|
-			$log.error "#{http.error}"
+		d.add_errback { |reason|
+			if reason.kind_of? EventMachine::HttpClient
+				$log.error "[WORKERS] HTTP error: #{reason.error}"
+			else
+				$log.error "[WORKERS] Failed to sent status: #{reason}"
+			end
 		}
 
 		return d
