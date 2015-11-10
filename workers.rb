@@ -80,6 +80,7 @@ class Workers
 
 		d.add_errback { |e|
 			message = "Failed to run #{command}: #{e}"
+			$log.debug "[WORKERS] #{message}"
 			send_state(service, Database::ST_ERR, message)
 		}
 
@@ -98,10 +99,10 @@ class Workers
 			end
 		}
 		d.add_errback { |reason|
-			if reason.kind_of? EventMachine::HttpClient
-				$log.error "[WORKERS] HTTP error: #{reason.error}"
+			if reason.value.instance_of? EM::HttpClient
+				$log.error "[WORKERS] HTTP error: #{reason.value.error}"
 			else
-				$log.error "[WORKERS] Failed to sent status: #{reason}"
+				$log.error "[WORKERS] Failed to sent status: #{reason.value}"
 			end
 		}
 

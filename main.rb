@@ -52,13 +52,15 @@ end
 
 def get_json(url)
 	d = EM::HttpRequest.new(url).get
-	d.add_errback { |http|
-		raise http.error
-	}
 	d.add_callback { |http|
 		raise http.response_header.http_reason unless http.response_header.status == 200
-
 		JSON.parse(http.response).deep_symbolize_keys
+	}
+	d.add_errback { |reason|
+		if reason.value.instance_of? EM::HttpClient
+			raise reason.value.error
+		end
+		reason	# Forward Failure down the errback chain
 	}
 	
 	return d
@@ -69,8 +71,8 @@ def get_config(workers)
 	d.add_callback { |data|
 		workers.reload(data)
 	}
-    d.add_errback { |e|
-		$log.error "Can't get config from server: #{e}"
+    d.add_errback { |reason|
+		$log.error "Can't get config from server: #{reason}"
 		EM.stop
     }
 end
