@@ -8,7 +8,7 @@ require 'yaml'
 require 'optparse'
 require 'logger'
 require 'active_support/all'
-require_relative 'em-twistedlike'
+require 'em-twistedlike'
 require_relative 'workers'
 require_relative 'logs'
 

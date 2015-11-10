@@ -1,3 +1,10 @@
+GIT
+  remote: git://github.com/nagius/em-twistedlike.git
+  revision: 4bda67d5ad68efb0fbefc5f318ed88852a1bac19
+  specs:
+    em-twistedlike (0.0.1)
+      eventmachine (~> 1.0)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -32,6 +39,7 @@ PLATFORMS
 DEPENDENCIES
   activesupport
   em-http-request
+  em-twistedlike!
   eventmachine
 
 BUNDLED WITH
