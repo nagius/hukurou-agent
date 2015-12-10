@@ -2,15 +2,11 @@
 require 'socket'
 
 # Taken from core/lib/database.rb
-class Database
-    class State
-        OK = "OK"
-        ERR = "ERROR"
-        WARN = "WARN"
-        STALE = "STALE"
-        MUTED = "MUTED"     # These two states are only used for History and Pubsub
-        ACKED = "ACKED"     # They are not in DB
-    end
+class State
+	OK = "OK"
+	CRIT = "CRIT"
+	WARN = "WARN"
+	STALE = "STALE"
 end
 
 class Workers
@@ -78,11 +74,13 @@ class Workers
 
 			case $?.exitstatus
 				when 0
-					state = Database::State::OK
+					state = State::OK
 				when 1
-					state = Database::State::WARN
+					state = State::WARN
+				when 3
+					state = State::STALE
 				else
-					state = Database::State::ERR
+					state = State::CRIT
 			end
 			[state, output]
 		}
@@ -94,7 +92,7 @@ class Workers
 		d.add_errback { |e|
 			message = "Failed to run #{command}: #{e}"
 			$log.debug "[WORKERS] #{message}"
-			send_state(service, Database::State::ERR, message)
+			send_state(service, State::CRIT, message)
 		}
 
 		return d
