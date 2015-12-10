@@ -17,7 +17,7 @@ def load_config
 	# Default configuration
 	config_file = "config.yml"
 	$CFG = {
-		:url => "http://127.0.0.1:9292/api",
+		:url => "http://127.0.0.1:9292",
 		:debug => false
 	}
 
@@ -67,7 +67,7 @@ def get_json(url)
 end
 
 def get_config(workers)
-	d = get_json("#{$CFG[:url]}/v1/device/#{Socket.gethostname}/config")
+	d = get_json("#{$CFG[:url]}/device/#{Socket.gethostname}/config")
 	d.add_callback { |data|
 		workers.reload(data)
 	}

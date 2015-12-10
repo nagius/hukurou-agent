@@ -1,11 +1,16 @@
 
 require 'socket'
 
-# TODO: factorize with server
+# Taken from core/lib/database.rb
 class Database
-    ST_OK = "green"
-    ST_WARN = "yellow"
-    ST_ERR = "red"
+    class State
+        OK = "OK"
+        ERR = "ERROR"
+        WARN = "WARN"
+        STALE = "STALE"
+        MUTED = "MUTED"     # These two states are only used for History and Pubsub
+        ACKED = "ACKED"     # They are not in DB
+    end
 end
 
 class Workers
@@ -65,11 +70,11 @@ class Workers
 			output = `#{command} 2>&1`
 			case $?.exitstatus
 				when 0
-					state = Database::ST_OK
+					state = Database::State::OK
 				when 1
-					state = Database::ST_WARN
+					state = Database::State::WARN
 				else
-					state = Database::ST_ERR
+					state = Database::State::ERR
 			end
 			[state, output]
 		}
@@ -81,7 +86,7 @@ class Workers
 		d.add_errback { |e|
 			message = "Failed to run #{command}: #{e}"
 			$log.debug "[WORKERS] #{message}"
-			send_state(service, Database::ST_ERR, message)
+			send_state(service, Database::State::ERR, message)
 		}
 
 		return d
@@ -90,7 +95,7 @@ class Workers
 	def send_state(service, state, message)
 		params = {:state => state, :message => message }
 		$log.debug "[WORKERS] Sending check result to server: #{params}"
-		d = EM::HttpRequest.new("#{$CFG[:url]}/v1/device/#{@me}/#{service}").post(:body => params)
+		d = EM::HttpRequest.new("#{$CFG[:url]}/state/#{@me}/#{service}").post(:body => params)
 		d.add_callback { |http|
 			if http.response_header.status == 201
 				$log.debug "[WORKERS] Check result successfuly sent: #{params}"
