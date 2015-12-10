@@ -75,6 +75,8 @@ def get_config(workers)
 		$log.error "Can't get config from server: #{failure}"
 		EM.stop
     }
+
+	return d
 end
 
 
@@ -82,6 +84,7 @@ load_config
 
 # Setup logger 
 # Logging to a file and handle rotation is a bad habit. Instead, stream to STDOUT and let the system manage logs.
+# http://www.mikeperham.com/2014/09/22/dont-daemonize-your-daemons/
 $log = Logger.new STDOUT
 $log.formatter = CustomFormatter.new 
 $log.level = $CFG[:debug] ? Logger::DEBUG : Logger::INFO

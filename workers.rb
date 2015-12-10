@@ -15,7 +15,7 @@ end
 
 class Workers
 	def initialize
-		@me = Socket.gethostname
+		@localhost = Socket.gethostname
 		@workers = Array.new
 		@services = nil
 	end
@@ -95,7 +95,7 @@ class Workers
 	def send_state(service, state, message)
 		params = {:state => state, :message => message }
 		$log.debug "[WORKERS] Sending check result to server: #{params}"
-		d = EM::HttpRequest.new("#{$CFG[:url]}/state/#{@me}/#{service}").post(:body => params)
+		d = EM::HttpRequest.new("#{$CFG[:url]}/state/#{@localhost}/#{service}").post(:body => params)
 		d.add_callback { |http|
 			if http.response_header.status == 201
 				$log.debug "[WORKERS] Check result successfuly sent: #{params}"
