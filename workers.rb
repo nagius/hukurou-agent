@@ -13,7 +13,7 @@ class Workers
 	def initialize
 		@localhost = Socket.gethostname
 		@workers = Array.new
-		@services = nil
+		@services = Hash.new
 	end
 
 	def reload(services)
@@ -23,7 +23,6 @@ class Workers
 
 	def start_workers()
 		$log.info "[WORKERS] Starting workers..."
-		@workers.clear
 
 		@services.each_pair do |service, conf|
 			if not (conf.has_key?(:remote) and conf[:remote])
@@ -40,6 +39,7 @@ class Workers
 			@workers.each { |worker|
 				worker.cancel()
 			}
+			@workers.clear
 		end
 	end
 
@@ -52,18 +52,8 @@ class Workers
 	def run_check(service, conf)
 		$log.debug "[WORKERS] Checking #{service} with #{conf}..."
 
-		# Do variable expantion
-		# TODO: add hostname and IP
-		# TODO: move this in Assets ?
-		begin
-			command = conf[:command] % conf
-		rescue KeyError => e
-			$log.error "[WORKERS] Cannot expand variable for #{conf[:command]}: #{e}"
-			return EM::DefaultDeferrable.failed(e)
-		end
-
 		d=EM.defer_to_thread {
-			output = ::IO.popen(command, :err=>[:child, :out]) do |io| 
+			output = ::IO.popen(conf[:command], :err=>[:child, :out]) do |io| 
 				begin
 					Timeout.timeout($CFG[:timeout]) { io.read }
 				rescue Timeout::Error
@@ -90,7 +80,7 @@ class Workers
 		}
 
 		d.add_errback { |e|
-			message = "Failed to run #{command}: #{e}"
+			message = "Failed to run #{conf[:command]}: #{e}"
 			$log.debug "[WORKERS] #{message}"
 			send_state(service, State::CRIT, message)
 		}
