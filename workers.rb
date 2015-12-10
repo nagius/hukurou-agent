@@ -67,7 +67,15 @@ class Workers
 		end
 
 		d=EM.defer_to_thread {
-			output = `#{command} 2>&1`
+			output = ::IO.popen(command, :err=>[:child, :out]) do |io| 
+				begin
+					Timeout.timeout($CFG[:timeout]) { io.read }
+				rescue Timeout::Error
+					Process.kill 9, io.pid
+					raise
+				end
+			end
+
 			case $?.exitstatus
 				when 0
 					state = Database::State::OK

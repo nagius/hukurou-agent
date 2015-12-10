@@ -18,7 +18,8 @@ def load_config
 	config_file = "config.yml"
 	$CFG = {
 		:url => "http://127.0.0.1:9292",
-		:debug => false
+		:debug => false,
+		:timeout => 30
 	}
 
 	# Read CLI options
