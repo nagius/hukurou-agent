@@ -59,7 +59,7 @@ module Hukurou
 				d=EM.defer_to_thread {
 					output = ::IO.popen(conf[:command], :err=>[:child, :out]) do |io| 
 						begin
-							Timeout.timeout($CFG[:timeout]) { io.read }
+							Timeout.timeout(Config[:timeout]) { io.read }
 						rescue Timeout::Error
 							Process.kill 9, io.pid
 							raise
@@ -95,7 +95,8 @@ module Hukurou
 			def send_state(service, state, message)
 				params = {:state => state, :message => message }
 				$log.debug "[WORKERS] Sending check result to server: #{params}"
-				d = EM::HttpRequest.new("#{$CFG[:url]}/state/#{@localhost}/#{service}").post(:body => params)
+
+				d = EM::HttpRequest.new("#{Config[:url]}/state/#{@localhost}/#{service}").post(:body => params)
 				d.add_callback { |http|
 					if http.response_header.status == 201
 						$log.debug "[WORKERS] Check result successfuly sent: #{params}"

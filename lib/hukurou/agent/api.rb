@@ -27,7 +27,7 @@ module Hukurou
 			end
 
 			def self.get_config(workers)
-				d = get_json("#{$CFG[:url]}/device/#{Socket.gethostname}/config")
+				d = get_json("#{Config[:url]}/device/#{Socket.gethostname}/config")
 				d.add_callback { |data|
 					workers.reload(data)
 				}
