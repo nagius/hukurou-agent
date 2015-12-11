@@ -1,17 +1,18 @@
 #!/usr/bin/env ruby
 
+unless $:.include?(File.dirname(__FILE__) + "/../lib/")
+	$: << File.dirname(__FILE__) + "/../lib"
+end
+
+
 require 'socket'
-require 'eventmachine'
-require 'em-http-request'
 require 'json'
 require 'yaml'
 require 'optparse'
-require 'logger'
-require 'active_support/all'
-require 'em-twistedlike'
-require_relative 'workers'
-require_relative 'logs'
 
+require 'hukurou/agent'
+
+require 'em-http-request'
 
 def load_config
 	# Default configuration
@@ -92,11 +93,11 @@ load_config
 # Logging to a file and handle rotation is a bad habit. Instead, stream to STDOUT and let the system manage logs.
 # http://www.mikeperham.com/2014/09/22/dont-daemonize-your-daemons/
 $log = Logger.new STDOUT
-$log.formatter = CustomFormatter.new 
+$log.formatter = Hukurou::Agent::CustomFormatter.new 
 $log.level = $CFG[:debug] ? Logger::DEBUG : Logger::INFO
 
 # Start main loop
-workers = Workers.new
+workers = Hukurou::Agent::Workers.new
 EM.run {
 	$log.info "Starting agent..."
 	get_config(workers)
