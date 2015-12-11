@@ -8,23 +8,36 @@ require 'hukurou/agent'
 
 Hukurou::Agent::Config.load()
 
+# Putting this as global because of EventMachine variable scope issue
+$workers = Hukurou::Agent::Workers.new
+
+def handle_signal(sig)
+	# Use add_timer to avoid trap conflict with Ruby 2.0
+	# https://github.com/eventmachine/eventmachine/issues/418
+	EM.add_timer(0) {
+		case sig
+			when :HUP
+				$log.info "Reloading config from server..."
+				Hukurou::Agent::API::get_config($workers)
+			when :INT, :TERM
+				$workers.stop_workers()
+				$log.info "Stopping agent..."
+				EM.stop
+		end
+	}
+end
+
 # Start main loop
-workers = Hukurou::Agent::Workers.new
 EM.run {
 	$log.info "Starting agent..."
-	Hukurou::Agent::API::get_config(workers)
+	Hukurou::Agent::API::get_config($workers)
 
-	Signal.trap("INT") { EM.stop }
-	Signal.trap("TERM") { EM.stop }
-	Signal.trap("HUP") {
-		# Use add_timer to avoid trap conflict with Ruby 2.0
-		# https://github.com/eventmachine/eventmachine/issues/418
-		EM.add_timer(0) {
-			$log.info "Reloading config from server..."
-			Hukurou::Agent::API::get_config(workers)
+	# Setup signal trap
+	[:INT, :TERM, :HUP].each { |sig|
+		Signal.trap(sig) {
+			handle_signal(sig)
 		}
 	}
 }
-
 
 # vim: ts=4:sw=4:ai:noet
