@@ -5,14 +5,11 @@ unless $:.include?(File.dirname(__FILE__) + "/../lib/")
 end
 
 
-require 'socket'
-require 'json'
 require 'yaml'
 require 'optparse'
 
 require 'hukurou/agent'
 
-require 'em-http-request'
 
 def load_config
 	# Default configuration
@@ -52,40 +49,6 @@ def load_config
 	$CFG.merge!(options)
 end
 
-def get_json(url)
-	d = EM::HttpRequest.new(url).get
-	d.add_callback { |http|
-		if http.response_header.status != 200
-			raise HTTPError, http.response_header.http_reason + ": " + http.response
-		end
-			
-		JSON.parse(http.response).deep_symbolize_keys
-	}
-	d.add_errback { |failure|
-		if failure.value.instance_of? EM::HttpClient
-			raise HTTPError, failure.value.error
-		end
-		failure	# Forward Failure down the errback chain
-	}
-	
-	return d
-end
-
-def get_config(workers)
-	d = get_json("#{$CFG[:url]}/device/#{Socket.gethostname}/config")
-	d.add_callback { |data|
-		workers.reload(data)
-	}
-    d.add_errback { |failure|
-		$log.error "Failed to fetch config: #{failure}"
-		EM.stop
-    }
-
-	return d
-end
-
-class HTTPError < StandardError
-end
 
 load_config
 
@@ -100,7 +63,7 @@ $log.level = $CFG[:debug] ? Logger::DEBUG : Logger::INFO
 workers = Hukurou::Agent::Workers.new
 EM.run {
 	$log.info "Starting agent..."
-	get_config(workers)
+	Hukurou::Agent::API::get_config(workers)
 
 	Signal.trap("INT") { EM.stop }
 	Signal.trap("TERM") { EM.stop }
@@ -109,7 +72,7 @@ EM.run {
 		# https://github.com/eventmachine/eventmachine/issues/418
 		EM.add_timer(0) {
 			$log.info "Reloading config from server..."
-			get_config(workers)
+			Hukurou::Agent::API::get_config(workers)
 		}
 	}
 }
