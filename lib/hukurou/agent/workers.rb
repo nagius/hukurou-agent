@@ -96,7 +96,7 @@ module Hukurou
 				params = {:state => state, :message => message }
 				$log.debug "[WORKERS] Sending check result to server: #{params}"
 
-				d = EM::HttpRequest.new("#{Config[:url]}/state/#{@localhost}/#{service}").post(:body => params)
+				d = EM::HttpRequest.new("#{Config[:url]}/states/#{@localhost}/#{service}").post(:body => params)
 				d.add_callback { |http|
 					if http.response_header.status == 201
 						$log.debug "[WORKERS] Check result successfuly sent: #{params}"

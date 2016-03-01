@@ -27,9 +27,9 @@ module Hukurou
 			end
 
 			def self.get_config(workers)
-				d = get_json("#{Config[:url]}/device/#{Socket.gethostname}/config")
+				d = get_json("#{Config[:url]}/config/#{Socket.gethostname}")
 				d.add_callback { |data|
-					workers.reload(data)
+					workers.reload(data[:services])
 				}
 				d.add_errback { |failure|
 					$log.error "Failed to fetch config: #{failure}"
