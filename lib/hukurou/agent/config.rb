@@ -12,7 +12,7 @@ module Hukurou
 
 			def initialize
 				# Default configuration file
-				@config_file = File.dirname(__FILE__) + "/../../../config/config.yml"
+				@config_file = "/etc/hukurou/agent/config.yml"
 
 				# Default configuration
 				@config = {
