@@ -27,6 +27,11 @@ require 'em-http-request'
 module Hukurou
 	module Agent
 		module API
+			
+			# Asynchronous helper to get symbolized JSON output form an HTTP GET call
+			#
+			# @param url [String] The URL to get
+			# @return [Deferrable] Will raise a HTTPError wrapped in a Failure in case of HTTP error
 			def self.get_json(url)
 				d = EM::HttpRequest.new(url).get
 				d.add_callback { |http|
@@ -46,6 +51,10 @@ module Hukurou
 				return d
 			end
 
+			# Load the device configuration from the Core API and reload local workers
+			#
+			# @param [Workers] The Workers object to reload
+			# @return [Deferred] Fired when the Workers has been reloaded
 			def self.get_config(workers)
 				d = get_json("#{Config[:url]}/config/#{Socket.gethostname}")
 				d.add_callback { |data|

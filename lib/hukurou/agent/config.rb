@@ -42,15 +42,24 @@ module Hukurou
 					:timeout => 30
 				}
 			end
-
+			
+			# Instanciate the Config object and parse configuration
 			def self.load
 				instance.load_config
 			end
 
+			# Get a configuration variable
+			#
+			# @param key [Symbol] The configuration key
+			# @return [Hash, String, Interger] The corresponding value
 			def self.[](key)
 				instance.config[key]
 			end
 
+			# Parse command line option and merge with configuration file
+			# This method should not be called directly, use #self.load
+			#
+			# return [nil]
 			def load_config
 				# Read CLI options
 				options = {}

@@ -40,6 +40,9 @@ module Hukurou
 				@services = Hash.new
 			end
 
+			# Update the services definition and restart all workers
+			#
+			# @param services [Hash] Services definition from configuration
 			def reload(services)
 				@services = services
 				restart_workers()
@@ -72,7 +75,11 @@ module Hukurou
 				start_workers()
 			end
 
-			# TODO: factorize with server ?
+			# Execute a check command and send the result to the Core API
+			#
+			# @param service [String] Service name
+			# @param conf [Hash] Configuration of the service's check
+			# @return [Deferrable]
 			def run_check(service, conf)
 				$log.debug "[WORKERS] Checking #{service} with #{conf}..."
 
@@ -112,6 +119,12 @@ module Hukurou
 				return d
 			end
 
+			# Send a state message to the Core API
+			#
+			# @param service [String] Service name
+			# @param state [String] State value, must be a member of State module
+			# @param message [String] Explanatory message
+			# @return [Deferrable]
 			def send_state(service, state, message)
 				params = {:state => state, :message => message }
 				$log.debug "[WORKERS] Sending check result to server: #{params}"
